@@ -1,54 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:naengboo_front_jw/screen/home_screen/home_screen_nonlogin.dart';
-import 'package:naengboo_front_jw/screen/home_screen/widgets/recipe_card.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:naengboo_front_jw/screen/home_screen/widgets/bottom_nav_bar.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String recipeImageUrl = ""; // 초기값을 빈 문자열로 설정
+  String recipeName = "치킨 샐러드"; // 예제 레시피
+
+  @override
+  void initState() {
+    super.initState();
+    fetchRecipeImage(recipeName); // 화면이 처음 로드될 때 실행
+  }
+
+  // 🔹 Unsplash API를 사용하여 이미지 가져오는 함수
+  Future<void> fetchRecipeImage(String query) async {
+    final String accessKey = "YOUR_UNSPLASH_ACCESS_KEY"; //  Unsplash API 키 입력
+    final String url = "https://api.unsplash.com/search/photos?query=$query&client_id=$accessKey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['results'].isNotEmpty) {
+          setState(() {
+            recipeImageUrl = data['results'][0]['urls']['regular'];
+          });
+        } else {
+          setState(() {
+            recipeImageUrl = ""; // 이미지가 없을 경우 빈 값 유지
+          });
+        }
+      } else {
+        throw Exception("Failed to load image");
+      }
+    } catch (e) {
+      print("Error fetching image: $e");
+      setState(() {
+        recipeImageUrl = ""; // 오류 발생 시 기본값 유지
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( //메인 상단부의 '로고', '냉장고를 부탁해', '로그인/회원가입 버튼' 부분
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        title: Row( // 여기 'Row'위젯에다가 로고랑, 우리 사이트명인 '냉장고를 부탁해' 넣었음. 근데 나중에 사이트명도 텍스트 말고 이미지로 같이 로고에 넣음 좋을것같음
+        elevation: 1,
+        title: Row(
           children: [
-            Image.asset('asset/img/logo.png', height: 30),
-            SizedBox(width: 8),
-            Text(
-              '냉장고를 부탁해',
-              style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+            Image.asset('asset/img/logo.png', width: 30, height: 30), // 로고 이미지
+            const SizedBox(width: 10),
+            const Text(
+              "냉장고를 부탁해",
+              style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen_NonLogin()), // 이동할 화면
+                );
+              },
+              child: const Text("로그아웃", style: TextStyle(color: Colors.black)),
             ),
           ],
         ),
-        actions: [
-          TextButton( // 로그아웃 버튼
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => HomeScreen_NonLogin()), // 이동할 화면
-              );
-            },
-            child: Text('로그아웃', style: TextStyle(color: Colors.black)),
-          ),
-        ],
       ),
-      body: Column( // '오늘의 레시피' Zone
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 100),
-          Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("오늘의 레시피", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('오늘의 레시피', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: recipeImageUrl.isNotEmpty
+                  ? Image.network(
+                recipeImageUrl,
+                width: double.infinity,
+                height: 180,
+                fit: BoxFit.cover,
+              )
+                  : Container(
+                width: double.infinity,
+                height: 180,
+                color: Colors.grey[300], // 🔹 이미지가 없을 때 빈 박스 표시
+                child: const Center(child: Text("이미지를 찾을 수 없습니다.")),
+              ),
+            ),
           ),
-          RecipeCard( // 추후에 레시피 여러개 화면에 넣을수있으니, 이런식으로 imagePath랑 foodName만 넣으면 붕어빵틀처럼 만들어주게 만듬
-            imagePath: 'asset/img/recipe.png',
-            foodName: 'Food Name',
+          const SizedBox(height: 10),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Section title", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text("Section", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
           ),
-          Divider(),
+          const SizedBox(height: 20),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(), // 대부분의 화면에 이 바가 있어야 하므로 자주 써먹을 수 있게 따로 클래스화했음
+      bottomNavigationBar: const BottomNavBar(), // 분리한 위젯 사용
     );
   }
 }

@@ -23,15 +23,33 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF335CB0),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text(
+              "냉장고를 부탁해",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
             Image.asset('asset/img/logo.png'),
             SizedBox(height: 28.0),
-            CircularProgressIndicator(color: Colors.white),
+            CircularProgressIndicator(color: Colors.indigo),
+            const SizedBox(height: 40),
+            const Text(
+              "혁신적인 냉장고 짬처리 서비스",
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
